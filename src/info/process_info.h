@@ -54,7 +54,7 @@ struct ProcessInfo {
   int pid;
 
   /**
-   * The thread group ID.
+   * The thread group ID
    */
   int tgid;
 
@@ -325,7 +325,7 @@ struct ProcessInfo {
   std::vector<ProcessInfo> threads;
 
   /**
-   * The percentage of a single CPU used by this process in the last
+   * The percentage of a single CPU used by this process in the last----------------------------
    */
   double cpu_percent;
 

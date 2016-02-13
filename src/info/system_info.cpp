@@ -11,12 +11,45 @@ using namespace std;
 
 
 double get_uptime() {
-  // TODO: implement me
-  return 0.0;
+  ifstream uptime(PROC_ROOT "/uptime");
+  double result;
+
+  if (!uptime) {
+    cerr << "Can't open uptime." << endl;
+    exit(-1);
+  }
+
+  uptime >> result;
+
+  uptime.close();
+  return result;
 }
 
 
 SystemInfo get_system_info() {
-  // TODO: implement me
-  return SystemInfo();
+  SystemInfo si;
+
+  si.num_user_threads = si.num_kernel_threads = si.num_threads = si.num_running = 0;
+
+  si.load_average = get_load_average();
+  si.cpus = get_cpu_info();
+  si.processes = get_all_processes(PROC_ROOT);
+
+  si.num_processes = si.processes.size();
+  si.uptime = get_uptime();
+
+  for (int i = 0; i < (int) si.processes.size(); i++) {
+    if (si.processes[i].state == 'R')
+      si.num_running++;
+
+    for (int j = 0; j < (int) si.processes[i].threads.size(); j++) {
+      if (si.processes[i].threads[j].is_thread()) {
+        si.num_threads++;
+        if (si.processes[i].threads[j].is_kernel_thread()) si.num_kernel_threads++;
+        else if (si.processes[i].threads[j].is_user_thread()) si.num_user_threads++;
+      }
+    }
+  }
+
+  return si;
 }
