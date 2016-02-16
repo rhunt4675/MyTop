@@ -34,6 +34,7 @@ SystemInfo get_system_info() {
   si.load_average = get_load_average();
   si.cpus = get_cpu_info();
   si.processes = get_all_processes(PROC_ROOT);
+  si.memory_info = get_memory_info();
 
   si.num_processes = si.processes.size();
   si.uptime = get_uptime();

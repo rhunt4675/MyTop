@@ -1,6 +1,7 @@
 #pragma once
 #include "cpu_info.h"
 #include "load_average_info.h"
+#include "memory_info.h"
 #include "process_info.h"
 #include <vector>
 
@@ -45,6 +46,11 @@ struct SystemInfo {
    * The average load of the system over the last 1, 5, and 15 minutes.
    */
   LoadAverageInfo load_average;
+
+  /**
+   * The state of the system's memory.
+   */
+  MemoryInfo memory_info;
 
   /**
    * Information about the time each CPU (and the CPUs overall) have spent in
