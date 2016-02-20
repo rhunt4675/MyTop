@@ -25,8 +25,9 @@ ProcessInfo get_process(int pid, const char* basedir) {
   ifstream cmdline(string(root + "/cmdline").c_str());
 
   if (!statm || !stat || !status || !cmdline) {
-  	cerr << "Can't open process file for PID=" << pid << "; Root=" << root << endl;
-  	exit(-1);
+    //Looks like the process has disppeared since get_process was spawned
+    //Return empty ProcessInfo struct
+    return pi;
   }
 
   statm >> pi.size >> pi.resident >> pi.share >> pi.trs >> pi.lrs >> pi.drs >> pi.dt;
@@ -49,13 +50,6 @@ ProcessInfo get_process(int pid, const char* basedir) {
   pi.command_line = pi.command_line.substr(0, pi.command_line.length() - 1);
   if (pi.command_line.length() == 0)
     pi.command_line = string(pi.comm).substr(1, strlen(pi.comm) - 2);
-
-  /*if (!pi.is_thread()) {
-    cerr << basedir << ":" << root << "/task" << endl;
-    pi.threads = get_all_processes(string(root + "/task").c_str());
-  }
-  else
-    pi.threads = vector<ProcessInfo>();*/
 
   if ((taskDir = opendir(string(root + "/task/").c_str())) && !closedir(taskDir))
     pi.threads = get_all_processes(string(root + "/task").c_str());
