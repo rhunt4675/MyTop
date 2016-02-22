@@ -1,6 +1,7 @@
 #include "formatting.h"
 #include <sstream>
 #include <iomanip>
+#include <cstdio>
 
 string TString(int Num) {
   stringstream ss;
@@ -15,17 +16,19 @@ template <typename T> string MinString(T n) {
 }
 
 string bytesToReadable(long bytes) {
-  string size[] = {"KiB", "MiB", "GiB"};
+  string size[] = {"B  ", "KiB", "MiB", "GiB"};
 
   int i(0);
   double newSize((double) bytes);
 
-  while ((bytes /= 1024) && i < 2) {
+  while ((bytes /= 1024) && i < 3) {
     newSize /= 1024.0;
     i++;
   }
 
-  return MinString((int)(newSize * 100) / 100.0) + " " + size[i];
+  char buffer[20];
+  sprintf(buffer, "%.2f %s", newSize, size[i].c_str());
+  return string(buffer);
 }
 
 string ticksToReadable(unsigned long long ticks) {

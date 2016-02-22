@@ -40,21 +40,21 @@ TEST(Formatting, TimeHandlesZero) {
 }
 
 TEST(Formatting, BytesHandlesZero) {
-  EXPECT_EQ("0 KiB", bytesToReadable(0));
+  EXPECT_EQ("0.00 B  ", bytesToReadable(0));
+}
+
+TEST(Formatting, BytesLessThan1KB) {
+  EXPECT_EQ("776.00 B  ", bytesToReadable(776));
 }
 
 TEST(Formatting, BytesLessThan1MB) {
-  EXPECT_EQ("776 KiB", bytesToReadable(776));
+  EXPECT_EQ("85.60 KiB", bytesToReadable(87654));
 }
 
 TEST(Formatting, BytesLessThan1GB) {
-  EXPECT_EQ("85.59 MiB", bytesToReadable(87654));
+  EXPECT_EQ("8.20 MiB", bytesToReadable(8593729));
 }
 
 TEST(Formatting, BytesLessThan1TB) {
-  EXPECT_EQ("8.19 GiB", bytesToReadable(8593729));
-}
-
-TEST(Formatting, BytesHuge) {
-  EXPECT_EQ("117.73 GiB", bytesToReadable(123456123));
+  EXPECT_EQ("114.98 GiB", bytesToReadable(123456123456));
 }

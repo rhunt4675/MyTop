@@ -9,6 +9,7 @@
 #include <ncurses.h>
 #include <getopt.h>
 #include <iostream>
+#include <unistd.h>
 #include "info/system_info.h"
 #include "utils/formatting.h"
 
@@ -16,7 +17,7 @@ using namespace std;
 
 bool pidSort(ProcessInfo p1, ProcessInfo p2) { return p1.pid < p2.pid; }
 bool cpuSort(ProcessInfo p1, ProcessInfo p2) { return p1.cpu_percent > p2.cpu_percent; }
-bool memSort(ProcessInfo p1, ProcessInfo p2) { return p1.size > p2.size; }
+bool memSort(ProcessInfo p1, ProcessInfo p2) { return p1.rss > p2.rss; }
 bool timeSort(ProcessInfo p1, ProcessInfo p2) { return (p1.utime + p1.stime) > (p2.utime + p2.stime); }
 
 void setProcessUtilization(vector<ProcessInfo>&, map<int, ProcessInfo>&, unsigned long long period);
@@ -99,6 +100,7 @@ void getFlags(int argc, char** argv, int* delay, int* sort, int* help) {
  */
 int main(int argc, char** argv) {
   int delay(10), sortMode(1), help(FALSE);
+  long page_size = sysconf(_SC_PAGESIZE);
 
   // Parse flags with getoptlong
   getFlags(argc, argv, &delay, &sortMode, &help);
@@ -150,8 +152,8 @@ int main(int argc, char** argv) {
     printw("\n\
 Number of Processes: %4d                Installed Memory: %10s\n\
 Running Processes:   %4d                Used Memory:      %10s\n\
-Number of Threads:   %4d                Available Memory: %10s\n\n", newSI.num_processes, bytesToReadable(mi.total_memory).c_str(),
-        newSI.num_running,  bytesToReadable(mi.total_memory - mi.free_memory).c_str(), newSI.num_threads, bytesToReadable(mi.free_memory).c_str());
+Number of Threads:   %4d                Available Memory: %10s\n\n", newSI.num_processes, bytesToReadable(mi.total_memory * 1024).c_str(),
+        newSI.num_running,  bytesToReadable((mi.total_memory - mi.free_memory) * 1024).c_str(), newSI.num_threads, bytesToReadable(mi.free_memory * 1024).c_str());
 
     CpuInfo diff = newSI.cpus[1] - oldSI.cpus[1];
     setProcessUtilization(newSI.processes, oldProcessMap, diff.total_time());
@@ -162,9 +164,10 @@ Number of Threads:   %4d                Available Memory: %10s\n\n", newSI.num_p
     printw("---------------------------------------------------------------------\n");
     printw("|  PID  |    Size    | State |  %%CPU  |  CPU Time  |  Binary        |\n");
     printw("---------------------------------------------------------------------\n");
-    for (int i = 0; i < (int)newSI.processes.size(); i++) {
-      printw("%7d   %10s     %c     %5.1f   %12s  %s\n", newSI.processes[i].pid, bytesToReadable(newSI.processes[i].size).c_str(), newSI.processes[i].state,
-      newSI.processes[i].cpu_percent, ticksToReadable(newSI.processes[i].stime + newSI.processes[i].utime).c_str(), newSI.processes[i].command_line.c_str());
+    for (int i = 0; i < (int)newSI.processes.size() && i < 24; i++) {
+      printw("%7d   %10s     %c     %5.1f   %12s  %s\n", newSI.processes[i].pid, bytesToReadable(newSI.processes[i].rss * page_size).c_str(), newSI.processes[i].state,
+        newSI.processes[i].cpu_percent, ticksToReadable(newSI.processes[i].stime + newSI.processes[i].utime).c_str(),
+        string(newSI.processes[i].comm).substr(1, strlen(newSI.processes[i].comm) - 2).c_str());
     }
     //End Draw Screeen --------------------------------
 

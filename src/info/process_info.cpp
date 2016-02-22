@@ -26,8 +26,8 @@ ProcessInfo get_process(int pid, const char* basedir) {
 
   if (!statm || !stat || !status || !cmdline) {
     //Looks like the process has disppeared since get_process was spawned
-    //Return empty ProcessInfo struct
-    return pi;
+    //Return invalid ProcessInfo struct
+    pi.pid = -1; return pi;
   }
 
   statm >> pi.size >> pi.resident >> pi.share >> pi.trs >> pi.lrs >> pi.drs >> pi.dt;
@@ -83,7 +83,8 @@ vector<ProcessInfo> get_all_processes(const char* basedir) {
       exit(-1);
     }
     if ((pid = strtol(pDirent->d_name, NULL, 10)) != 0L) {
-      vpi.push_back(get_process(pid, basedir));
+      ProcessInfo pi = get_process(pid, basedir);
+      if (pi.pid != -1) vpi.push_back(pi);
     }
   }
 
