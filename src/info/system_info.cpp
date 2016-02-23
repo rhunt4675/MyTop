@@ -9,7 +9,7 @@
 
 using namespace std;
 
-
+// get_uptime returns a double from /proc/uptime representing the system uptime
 double get_uptime() {
   ifstream uptime(PROC_ROOT "/uptime");
   double result;
@@ -25,7 +25,8 @@ double get_uptime() {
   return result;
 }
 
-
+// get_system_info returns a SystemInfo struct comprising information from all structs in /src/info
+// It also counts the number of each type of thread and the number of running processes.
 SystemInfo get_system_info() {
   SystemInfo si;
 

@@ -5,7 +5,7 @@
 
 using namespace std;
 
-
+// get_load_average reads /proc/loadavg and returns a LoadAverageInfo struct containing information about system load
 LoadAverageInfo get_load_average() {
   ifstream inFile(PROC_ROOT "/loadavg");
   LoadAverageInfo lai;

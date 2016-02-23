@@ -6,7 +6,7 @@
 
 using namespace std;
 
-
+// get_cpu_info reads /proc/stat and generates a vector of CpuInfo structs
 vector<CpuInfo> get_cpu_info() {
   ifstream inFile(PROC_ROOT "/stat");
 
@@ -15,32 +15,32 @@ vector<CpuInfo> get_cpu_info() {
   CpuInfo ci;
 
   if (!inFile) {
-  	cerr << "Can't open stat." << endl;
-  	exit(-1);
+    cerr << "Can't open stat." << endl;
+    exit(-1);
   }
 
   while(true) {
-  	inFile >> cpuName;
-  	if (cpuName.substr(0, 3) != "cpu")
-  		break;
-  	inFile >> ci.user_time >> ci.nice_time >> ci.system_time
-  		>> ci.idle_time >> ci.io_wait_time >> ci.irq_time
-  		>> ci.softirq_time >> ci.steal_time >> ci.guest_time >> ci.guest_nice_time;
+    inFile >> cpuName;
+    if (cpuName.substr(0, 3) != "cpu")
+      break;
+    inFile >> ci.user_time >> ci.nice_time >> ci.system_time
+    	   >> ci.idle_time >> ci.io_wait_time >> ci.irq_time
+  	   >> ci.softirq_time >> ci.steal_time >> ci.guest_time >> ci.guest_nice_time;
 
-  	cpus.push_back(ci);
+    cpus.push_back(ci);
   }
 
   inFile.close();
   return cpus;
 }
 
-
+// - (Minus Sign) operater overload to facilitate "delta method" calculations
 CpuInfo operator -(const CpuInfo& lhs, const CpuInfo& rhs) {
   CpuInfo result;
 
   result.user_time = lhs.user_time - rhs.user_time;
   result.nice_time = lhs.nice_time - rhs.nice_time;
-  result.system_time = lhs.nice_time - rhs.nice_time;
+  result.system_time = lhs.system_time - rhs.system_time;
   result.idle_time = lhs.idle_time - rhs.idle_time;
   result.io_wait_time = lhs.io_wait_time - rhs.io_wait_time;
   result.irq_time = lhs.irq_time - rhs.irq_time;

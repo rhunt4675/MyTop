@@ -9,7 +9,8 @@
 
 using namespace std;
 
-
+// get_process retruns an individual ProcessInfo struct given a basedir and pid
+// This function is extensible to functions and threads alike.
 ProcessInfo get_process(int pid, const char* basedir) {
   ProcessInfo pi;
   string tmp;
@@ -25,21 +26,22 @@ ProcessInfo get_process(int pid, const char* basedir) {
   ifstream cmdline(string(root + "/cmdline").c_str());
 
   if (!statm || !stat || !status || !cmdline) {
-  	cerr << "Can't open process file for PID=" << pid << "; Root=" << root << endl;
-  	exit(-1);
+    //Looks like the process has disppeared since get_process was spawned
+    //Return invalid ProcessInfo struct
+    pi.pid = -1; return pi;
   }
 
   statm >> pi.size >> pi.resident >> pi.share >> pi.trs >> pi.lrs >> pi.drs >> pi.dt;
   stat >> pi.pid >> pi.comm >> pi.state >> pi.ppid >> pi.pgrp >> pi.session >> pi.tty_nr
-  	 >> pi.tpgid >> pi.flags >> pi.minflt >> pi.cminflt >> pi.majflt >> pi.cmajflt >> pi.utime 
-  	 >> pi.stime >> pi.cutime >> pi.cstime >> pi.priority >> pi.nice >> pi.num_threads 
-  	 >> pi.itrealvalue >> pi.starttime >> pi.vsize >> pi.rss >> pi.rsslim >> pi.startcode 
+  	 >> pi.tpgid >> pi.flags >> pi.minflt >> pi.cminflt >> pi.majflt >> pi.cmajflt >> pi.utime
+  	 >> pi.stime >> pi.cutime >> pi.cstime >> pi.priority >> pi.nice >> pi.num_threads
+  	 >> pi.itrealvalue >> pi.starttime >> pi.vsize >> pi.rss >> pi.rsslim >> pi.startcode
   	 >> pi.endcode >> pi.startstack >> pi.kstkesp >> pi.kstkeip >> pi.signal >> pi.blocked
   	 >> pi.sigignore >> pi.sigcatch >> pi.wchan >> pi.nswap >> pi.cnswap >> pi.exit_signal
   	 >> pi.processor >> pi.rt_priority >> pi.policy >> pi.delayacct_blkio_ticks
   	 >> pi.guest_time >> pi.cguest_time;
   status >> tmp >> tmp >> tmp >> tmp >> tmp >> tmp >> pi.tgid;
-  
+
   getline(cmdline, pi.command_line);
 
   // Get full command string -- default to pi.comm if null
@@ -49,13 +51,6 @@ ProcessInfo get_process(int pid, const char* basedir) {
   pi.command_line = pi.command_line.substr(0, pi.command_line.length() - 1);
   if (pi.command_line.length() == 0)
     pi.command_line = string(pi.comm).substr(1, strlen(pi.comm) - 2);
-
-  /*if (!pi.is_thread()) {
-    cerr << basedir << ":" << root << "/task" << endl;
-    pi.threads = get_all_processes(string(root + "/task").c_str());
-  }
-  else
-    pi.threads = vector<ProcessInfo>();*/
 
   if ((taskDir = opendir(string(root + "/task/").c_str())) && !closedir(taskDir))
     pi.threads = get_all_processes(string(root + "/task").c_str());
@@ -70,7 +65,8 @@ ProcessInfo get_process(int pid, const char* basedir) {
   return pi;
 }
 
-
+// get_all_processes scans a given basedir for all process/thread directories and returns a vector describing them
+// This is extensible to a system (/proc) directory and a process' task directory of threads
 vector<ProcessInfo> get_all_processes(const char* basedir) {
   vector<ProcessInfo> vpi;
   DIR* pDir = NULL;
@@ -89,7 +85,8 @@ vector<ProcessInfo> get_all_processes(const char* basedir) {
       exit(-1);
     }
     if ((pid = strtol(pDirent->d_name, NULL, 10)) != 0L) {
-      vpi.push_back(get_process(pid, basedir));
+      ProcessInfo pi = get_process(pid, basedir);
+      if (pi.pid != -1) vpi.push_back(pi);
     }
   }
 

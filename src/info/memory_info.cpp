@@ -8,7 +8,7 @@ using namespace std;
 
 const static int NUM_TARGETS = 6;
 
-
+// get_memory_info reads /proc/meminfo and generates a MemoryInfo struct describing the usage of system memory
 MemoryInfo get_memory_info() {
   ifstream inFile(PROC_ROOT "/meminfo");
   MemoryInfo mi;
