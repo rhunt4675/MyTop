@@ -3,18 +3,21 @@
 #include <iomanip>
 #include <cstdio>
 
+// TString generates a 0-padded string of length 2 for use in a timestamp
 string TString(int Num) {
   stringstream ss;
   ss << setfill('0') << setw(2) << Num;
   return ss.str();
 }
 
+// MinString generates a string without padding given an int/double
 template <typename T> string MinString(T n) {
   stringstream ss;
   ss << n;
   return ss.str();
 }
 
+// bytesToReadable generates a human readable string given a quantity in bytes
 string bytesToReadable(long bytes) {
   string size[] = {"B  ", "KiB", "MiB", "GiB"};
 
@@ -31,6 +34,7 @@ string bytesToReadable(long bytes) {
   return string(buffer);
 }
 
+// ticksToReadable generates a human readable timestamp string (HH:MM:SS.HH) given some number of ticks
 string ticksToReadable(unsigned long long ticks) {
   int hrs = ticks / 360000;
   int mins = (ticks % 360000) / 6000;
@@ -49,6 +53,7 @@ string ticksToReadable(unsigned long long ticks) {
   return TString(hrs) + ":" + TString(mins) + ":" + TString(secs) + "." + TString(hdths);
 }
 
+// uptimeToReadable generates a human readable timestamp string (XX days, HH:MM:SS) given an uptime double
 string uptimeToReadable(double uptime) {
   int hdths = (int) (uptime * 100);
   int days = hdths / 8640000;

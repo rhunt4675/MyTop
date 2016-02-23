@@ -15,11 +15,13 @@
 
 using namespace std;
 
+// Sort Functions
 bool pidSort(ProcessInfo p1, ProcessInfo p2) { return p1.pid < p2.pid; }
 bool cpuSort(ProcessInfo p1, ProcessInfo p2) { return p1.cpu_percent > p2.cpu_percent; }
 bool memSort(ProcessInfo p1, ProcessInfo p2) { return p1.rss > p2.rss; }
 bool timeSort(ProcessInfo p1, ProcessInfo p2) { return (p1.utime + p1.stime) > (p2.utime + p2.stime); }
 
+// Misc CPU Calculation Functions
 void setProcessUtilization(vector<ProcessInfo>&, map<int, ProcessInfo>&, unsigned long long period);
 void fillMap(vector<ProcessInfo>&, map<int, ProcessInfo>&);
 
@@ -37,12 +39,13 @@ void exit_if_user_presses_q() {
   }
 }
 
+// Utilizes getopt_long to parse user-provided arguments
 void getFlags(int argc, char** argv, int* delay, int* sort, int* help) {
   static struct option long_options[] = {
-    {"delay", required_argument, NULL, 'd'},
-    { "sort", required_argument, NULL, 's'},
-    { "help",       no_argument, NULL, 'h'},
-    {      0,                 0,    0,   0}
+    {   "delay", required_argument, NULL, 'd'},
+    {"sort-key", required_argument, NULL, 's'},
+    {    "help",       no_argument, NULL, 'h'},
+    {         0,                 0,    0,   0}
   };
 
   while(true) {
@@ -54,7 +57,7 @@ void getFlags(int argc, char** argv, int* delay, int* sort, int* help) {
     switch(flag_char) {
       case 'd':
         if (atoi(optarg) < 0) {
-          cerr << "Invalid value \"" << optarg << "\" for option delay.\nExiting." << endl;
+          cerr << "Invalid value \"" << optarg << "\" for option delay." << endl;
           exit(-1);
         }
         *delay = atoi(optarg); break;
@@ -72,14 +75,14 @@ void getFlags(int argc, char** argv, int* delay, int* sort, int* help) {
 
       case 'h':
         cout << "MyTop v1.0 -- by Ryan Hunt" << endl << endl
-             << "Usage: " << endl
+             << "Usage: mytop -d DELAY -s SORT_COL [-h]" << endl
              << "	-d --delay DELAY 	(Delay between updates, in tenths of seconds)" << endl
              << "	-s --sort-key COLUMN 	(Sort by this column; one of: PID, CPU, MEM, TIME)" << endl
              << "	-h --help 		(Display a help message about these flags and exit)" << endl;
         exit(0);
 
       case '?':
-        break;
+       exit(-1);
 
       default:
         exit(-1);
@@ -115,6 +118,7 @@ int main(int argc, char** argv) {
   // immediately respond to user input while not blocking indefinitely.
   timeout(delay * 100);
 
+  // Array of sorters
   bool (*sorters[])(ProcessInfo, ProcessInfo) = {pidSort, cpuSort, memSort, timeSort};
 
   SystemInfo newSI = get_system_info();
@@ -127,7 +131,7 @@ int main(int argc, char** argv) {
     //Cycle System Info Structs
     oldSI = newSI; newSI = get_system_info();
 
-    //Draw Screen ------------------------------------
+    //Begin Draw Screen ----------------------------------------------------------------------------------------------------------------------------------------
     double uptime = newSI.uptime;
     printw("                    __  __     _____\n                   |  \\/  |_  |_   _|__ _ __\n                   | |\\/| | || || |/ _ \\ '_ \\\n                   |_|  |_|\\_, ||_|\\___/ .__/\n                            |__/        |_|   \n\n");
     printw("                System Uptime: %s\n", uptimeToReadable(uptime).c_str());
@@ -165,11 +169,11 @@ Number of Threads:   %4d                Available Memory: %10s\n\n", newSI.num_p
     printw("|  PID  |    Size    | State |  %%CPU  |  CPU Time  |  Binary        |\n");
     printw("---------------------------------------------------------------------\n");
     for (int i = 0; i < (int)newSI.processes.size() && i < 24; i++) {
-      printw("%7d   %10s     %c     %5.1f   %12s  %s\n", newSI.processes[i].pid, bytesToReadable(newSI.processes[i].rss * page_size).c_str(), newSI.processes[i].state,
+      printw("%7d   %11s    %c     %5.1f   %12s  %s\n", newSI.processes[i].pid, bytesToReadable(newSI.processes[i].rss * page_size).c_str(), newSI.processes[i].state,
         newSI.processes[i].cpu_percent, ticksToReadable(newSI.processes[i].stime + newSI.processes[i].utime).c_str(),
         string(newSI.processes[i].comm).substr(1, strlen(newSI.processes[i].comm) - 2).c_str());
     }
-    //End Draw Screeen --------------------------------
+    //End Draw Screeen ----------------------------------------------------------------------------------------------------------------------------------------
 
     // Redraw the screen.
     refresh();
@@ -184,6 +188,7 @@ Number of Threads:   %4d                Available Memory: %10s\n\n", newSI.num_p
   return EXIT_SUCCESS;
 }
 
+// setProcessUtilization computes the utilization of each process from a map of previous system information data
 void setProcessUtilization(vector<ProcessInfo>& processes, map<int, ProcessInfo>& prevProcesses, unsigned long long period) {
   for (int i = 0; i < (int)processes.size(); i++) {
     if (prevProcesses.find(processes[i].pid) == prevProcesses.end())
@@ -195,6 +200,7 @@ void setProcessUtilization(vector<ProcessInfo>& processes, map<int, ProcessInfo>
   }
 }
 
+// fillMap generates a map of PIDs to ProcessInfo structs given an array of ProcessInfo structs
 void fillMap(vector<ProcessInfo>& processes, map<int, ProcessInfo>& oldMap) {
   oldMap.clear();
 
