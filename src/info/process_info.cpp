@@ -40,7 +40,8 @@ ProcessInfo get_process(int pid, const char* basedir) {
   	 >> pi.sigignore >> pi.sigcatch >> pi.wchan >> pi.nswap >> pi.cnswap >> pi.exit_signal
   	 >> pi.processor >> pi.rt_priority >> pi.policy >> pi.delayacct_blkio_ticks
   	 >> pi.guest_time >> pi.cguest_time;
-  status >> tmp >> tmp >> tmp >> tmp >> tmp >> tmp >> pi.tgid;
+  status >> tmp >> tmp >> tmp >> tmp >> tmp >> tmp >> pi.tgid >> tmp >> tmp >> tmp >> tmp
+	 >> tmp >> tmp >> tmp >> tmp >> tmp >> pi.uid;
 
   getline(cmdline, pi.command_line);
 

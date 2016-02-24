@@ -10,6 +10,7 @@
 #include <getopt.h>
 #include <iostream>
 #include <unistd.h>
+#include <pwd.h>
 #include "info/system_info.h"
 #include "utils/formatting.h"
 
@@ -68,7 +69,7 @@ void getFlags(int argc, char** argv, int* delay, int* sort, int* help) {
         else if (strcmp(optarg, "MEM") == 0) *sort = 2;
         else if (strcmp(optarg, "TIME") == 0) *sort = 3;
         else {
-          cerr << "Invalid value \"" << optarg << "\" for option sort.\nExiting." << endl;
+          cerr << "Invalid value \"" << optarg << "\" for option sort." << endl;
           exit(-1);
         }
         break;
@@ -102,7 +103,7 @@ void getFlags(int argc, char** argv, int* delay, int* sort, int* help) {
  * Entry point for the program.
  */
 int main(int argc, char** argv) {
-  int delay(10), sortMode(1), help(FALSE);
+  int delay(10), sortMode(1), help(FALSE), row, col;
   long page_size = sysconf(_SC_PAGESIZE);
 
   // Parse flags with getoptlong
@@ -110,6 +111,7 @@ int main(int argc, char** argv) {
 
   // ncurses initialization
   initscr();
+  getmaxyx(stdscr, row, col);
 
   // Don't show a cursor.
   curs_set(FALSE);
@@ -154,10 +156,10 @@ int main(int argc, char** argv) {
     MemoryInfo mi = newSI.memory_info;
 
     printw("\n\
-Number of Processes: %4d                Installed Memory: %10s\n\
-Running Processes:   %4d                Used Memory:      %10s\n\
-Number of Threads:   %4d                Available Memory: %10s\n\n", newSI.num_processes, bytesToReadable(mi.total_memory * 1024).c_str(),
-        newSI.num_running,  bytesToReadable((mi.total_memory - mi.free_memory) * 1024).c_str(), newSI.num_threads, bytesToReadable(mi.free_memory * 1024).c_str());
+Number of Processes:     %4d            Installed Memory: %10s\n\
+Running Processes:       %4d            Used Memory:      %10s\n\
+Number of Threads: %3dU, %3dK            Available Memory: %10s\n\n", newSI.num_processes, bytesToReadable(mi.total_memory * 1024).c_str(),
+        newSI.num_running,  bytesToReadable((mi.total_memory - mi.free_memory) * 1024).c_str(), newSI.num_user_threads, newSI.num_kernel_threads, bytesToReadable(mi.free_memory * 1024).c_str());
 
     CpuInfo diff = newSI.cpus[1] - oldSI.cpus[1];
     setProcessUtilization(newSI.processes, oldProcessMap, diff.total_time());
@@ -166,11 +168,12 @@ Number of Threads:   %4d                Available Memory: %10s\n\n", newSI.num_p
     sort(newSI.processes.begin(), newSI.processes.end(), (*sorters[sortMode]));
 
     printw("---------------------------------------------------------------------\n");
-    printw("|  PID  |    Size    | State |  %%CPU  |  CPU Time  |  Binary        |\n");
+    printw("|S|  PID  |    Size    | CPU |  CPU Time  |  User  |     Binary     |\n");
     printw("---------------------------------------------------------------------\n");
-    for (int i = 0; i < (int)newSI.processes.size() && i < 24; i++) {
-      printw("%7d   %11s    %c     %5.1f   %12s  %s\n", newSI.processes[i].pid, bytesToReadable(newSI.processes[i].rss * page_size).c_str(), newSI.processes[i].state,
-        newSI.processes[i].cpu_percent, ticksToReadable(newSI.processes[i].stime + newSI.processes[i].utime).c_str(),
+    for (int i = 0; i < (int)newSI.processes.size() && i < row - 26; i++) {
+      printw(" %c  %5d  %11s %5.1f %12s  %8s  %s\n", newSI.processes[i].state, newSI.processes[i].pid,
+        bytesToReadable(newSI.processes[i].rss * page_size).c_str(), newSI.processes[i].cpu_percent,
+        ticksToReadable(newSI.processes[i].stime + newSI.processes[i].utime).c_str(), getpwuid(newSI.processes[i].uid)->pw_name,
         string(newSI.processes[i].comm).substr(1, strlen(newSI.processes[i].comm) - 2).c_str());
     }
     //End Draw Screeen ----------------------------------------------------------------------------------------------------------------------------------------

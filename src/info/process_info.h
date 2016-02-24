@@ -58,6 +58,9 @@ struct ProcessInfo {
    */
   int tgid;
 
+  // Personal addition -- for looking up username
+  int uid;
+
   /**
    * The filename of the executable, in parentheses.
    */
